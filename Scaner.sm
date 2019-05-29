@@ -1,0 +1,73 @@
+%header Scaner.h 
+%class Scaner
+%start MainMap::Start
+
+%map MainMap
+%%
+
+
+//State	Transition							       End State	         Action	
+Start           
+       Entry                                                             {reset_all();}
+{
+        letter(ch : char)	                       nil 			         {buffer.append(1, ch);inc_len();}
+		space(ch : char)[ctxt.chk_is_type()]       Name                  {len_and_buf_reset();buffer.append(1, ch);inc_len();}
+}
+
+
+Name
+{
+        letter(ch : char)[ctxt.chk_len()]	       nil 			         {buffer.append(1, ch);inc_len();}
+		digit(ch : char)[ctxt.chk_len()]	       nil 			         {buffer.append(1, ch);inc_len();}
+        open_scobe(ch : char)[ctxt.chk_is_name()]  Count 			     {getConflict();len_and_buf_reset();buffer.append(1, ch);inc_len();}
+}
+
+
+Count
+{
+        digit(ch : char)[ctxt.chk_count_len()]	   nil 			         {buffer.append(1, ch);inc_len();}
+        close_scobe(ch : char)	                   List 			     {getNumber();len_and_buf_reset();buffer.append(1, ch);inc_len();}
+}
+
+
+List
+{ 
+        open_bracket(ch : char)                     nil 			     {buffer.append(1, ch);inc_len();}  
+        close_bracket(ch : char)                    nil 			     {buffer.append(1, ch);inc_len();} 
+		equal(ch : char)                            nil 			     {buffer.append(1, ch);inc_len();} 
+		digit(ch : char)                            nil 			     {buffer.append(1, ch);inc_len();} 
+		comma(ch : char)[ctxt.chk_comma()]          nil 			     {buffer.append(1, ch);inc_len();inc_CommaNumber();} 
+		minus(ch : char)[ctxt.chk_minus()]          nil 			     {buffer.append(1, ch);inc_len();} 
+		EOS[ctxt.chk_is_list()]                     OK 			         {Right();} 
+}
+
+Default
+{
+	letter(ch : char) 						        Error		         {}
+	digit(ch : char) 						        Error		         {}
+	space(ch : char) 					            Error		         {}
+	comma(ch : char) 			    	            Error		         {}
+	minus(ch : char)                                Error                {}
+	equal(ch : char) 					            Error		         {}
+	open_bracket(ch : char)                         Error			     {}
+	close_bracket(ch : char)                        Error			     {}
+	open_scobe(ch : char)                           Error			     {}
+	close_scobe(ch : char)                          Error			     {}
+	EOS 				                            Error			     {}
+	unknown					                        Error			     {}
+	RESET					                        Start	             {reset_all();}
+}
+
+
+OK
+{
+	EOS											    nil			         {}
+}
+
+
+Error
+{
+}
+
+
+%%
